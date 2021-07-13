@@ -1,0 +1,81 @@
+# detect-direct-checkins
+
+## Overview
+
+The `detect-direct-checkins` utility can be used to detect non-merge commits on given branches in a Git repository. It
+can be run as a [pre-commit framework](https://pre-commit.com/) hook.
+
+## Example Usage
+
+### Command line tool
+
+Install the command line program with
+
+```bash
+python3 -m pip install "git+https://github.com/IngoMeyer441/detect-direct-checkins@master"
+```
+
+Switch your working directory to a Git repository you would like to check and run
+
+```bash
+detect-direct-checkins --branch release --allow-root
+```
+
+to check a branch ``release`` for non-merge commits (but ignore initial root commits without parents).
+
+### Usage as a pre-commit hook
+
+Add
+
+```yaml
+- repo: https://github.com/IngoMeyer441/detect-direct-checkins
+  rev: 0.1.0
+  hooks:
+  - id: detect-direct-checkins
+  - args: ['--branch=release', '--allow-root']
+```
+
+to your `.pre-commit-config.yaml` to detect direct checkins to a branch `release`. The `--allow-root` switch ignores
+root commits (initial commits without parents).
+
+The `--branch` argument can be given multiple times to check more than one branch.
+
+This check is a `post-commit` check, so make sure to install the pre-commit framework as a `post-commit` hook:
+
+```bash
+pre-commit install --hook-type post-commit
+```
+
+I recommend to set `default_stages: ['commit']` in your `.pre-commit-config.yaml`. Otherwise, most checks will run
+twice (in the `pre-commit` and `post-commit` stage).
+
+**Important note**: Since this is a `post-commit` hook, this check **will not avoid the creation of disallowed
+commits**. It only tells you that a disallowed commit has been created. However, you can run
+
+```bash
+pre-commit run --hook-type post-commit
+```
+
+as part of your CI pipeline to enforce this check. Direct-checkins to protected branches will cause this check to fail
+in a CI job.
+
+## Options
+
+These options are supported:
+
+- `--branch`: Branch which must only contain merge commits, can be given multiple times.
+- `--ignore`: Commit hashes which will be ignored, can be given multiple times
+- `--allow-root`: Allow root commits (commits without parents).
+
+## Contributing
+
+Please open [an issue on GitHub](https://github.com/IngoMeyer441/detect-direct-checkins/issues/new) if you
+experience bugs or miss features. Please consider to send a pull request if you can spend time on fixing the issue
+yourself. This project uses [pre-commit](https://pre-commit.com) itself to ensure code quality and a consistent code
+style. Run
+
+```bash
+make git-hooks-install
+```
+
+to install all linters as Git hooks in your local clone of `detect-direct-checkins`.
