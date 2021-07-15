@@ -34,7 +34,7 @@ repos:
   - id: editorconfig-checker
     exclude_types: [markdown]
 - repo: https://github.com/IngoMeyer441/detect-direct-checkins
-  rev: v0.1.0
+  rev: v0.1.1
   hooks:
   - id: detect-direct-checkins
     args: ['--branch=master', '--allow-root']

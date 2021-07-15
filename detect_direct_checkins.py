@@ -10,8 +10,12 @@ __author__ = "Ingo Meyer"
 __email__ = "i.meyer@fz-juelich.de"
 __copyright__ = "Copyright © 2021 Forschungszentrum Jülich GmbH. All rights reserved."
 __license__ = "MIT"
-__version_info__ = (0, 1, 0)
+__version_info__ = (0, 1, 1)
 __version__ = ".".join(map(str, __version_info__))
+
+
+class FoundNoSymbolicNameError(Exception):
+    pass
 
 
 def get_argumentparser() -> argparse.ArgumentParser:
@@ -64,6 +68,19 @@ def check_arguments(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def get_symbolic_name(commit_hash: str) -> str:
+    try:
+        symbolic_name = subprocess.check_output(
+            ["git", "name-rev", "--name-only", "--no-undefined", commit_hash],
+            universal_newlines=True,
+        ).strip()
+    except subprocess.CalledProcessError as e:
+        raise FoundNoSymbolicNameError(
+            'Could not find a symbolic name for the commit hash "{}".'.format(commit_hash)
+        ) from e
+    return symbolic_name
+
+
 def has_only_merge_commits(
     branches: Iterable[str], ignored_commit_hashes: Iterable[str], allow_root_commit: bool
 ) -> bool:
@@ -98,7 +115,11 @@ def has_only_merge_commits(
             found_direct_commits = True
             print('Branch "{}" has direct checkins:'.format(branch), file=sys.stderr)
             for commit in direct_commits:
-                print("\t{hash}".format(hash=commit), file=sys.stderr)
+                try:
+                    symbolic_name = get_symbolic_name(commit)
+                    print("\t{hash}\t{name}".format(hash=commit, name=symbolic_name), file=sys.stderr)
+                except FoundNoSymbolicNameError:
+                    print("\t{hash}".format(hash=commit), file=sys.stderr)
     return not found_direct_commits
 
 
