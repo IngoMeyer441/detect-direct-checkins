@@ -9,13 +9,25 @@ can be run as a [pre-commit framework](https://pre-commit.com/) hook.
 
 ### Command line tool
 
-Install the command line program with
+`detect-direct-checkins` is available on PyPI for Python 3.5+ and can be installed with `pip`:
 
 ```bash
-python3 -m pip install "git+https://github.com/IngoMeyer441/detect-direct-checkins@master"
+python3 -m pip install detect-direct-checkins
 ```
 
-Switch your working directory to a Git repository you would like to check and run
+If you use Arch Linux or one of its derivatives, you can also install `detect-direct-checkins` from the
+[AUR](https://aur.archlinux.org/packages/python-detect-direct-checkins/):
+
+```bash
+yay -S python-detect-direct-checkins
+```
+
+You also find self-contained executables for 64-bit Linux distributions and macOS High Sierra and newer on the
+[releases page](https://github.com/IngoMeyer441/detect-direct-checkins/releases/latest). They are created with
+[PyInstaller](http://www.pyinstaller.org) and only require glibc >= 2.17 on Linux (should be fine on any recent
+Linux system).
+
+After the installation, switch your working directory to a Git repository you would like to check and run
 
 ```bash
 detect-direct-checkins --branch release --allow-root
@@ -29,7 +41,7 @@ Add
 
 ```yaml
 - repo: https://github.com/IngoMeyer441/detect-direct-checkins
-  rev: 0.1.0
+  rev: 0.1.2
   hooks:
   - id: detect-direct-checkins
   - args: ['--branch=release', '--allow-root']

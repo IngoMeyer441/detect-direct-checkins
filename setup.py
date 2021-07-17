@@ -1,8 +1,50 @@
 import os
 import runpy
-from typing import Optional, cast
+import subprocess
+from distutils.cmd import Command
+from tempfile import TemporaryDirectory
+from typing import List, Optional, Tuple, cast
 
 from setuptools import setup
+
+
+class PyinstallerCommand(Command):
+    description = "create a self-contained executable with PyInstaller"
+    user_options = []  # type: List[Tuple[str, Optional[str], str]]
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            subprocess.check_call(["python3", "-m", "venv", os.path.join(temp_dir, "env")])
+            subprocess.check_call([os.path.join(temp_dir, "env/bin/pip"), "install", "."])
+            subprocess.check_call([os.path.join(temp_dir, "env/bin/pip"), "install", "pyinstaller<4.4"])
+            with open(os.path.join(temp_dir, "entrypoint.py"), "w") as f:
+                f.write(
+                    """
+#!/usr/bin/env python3
+
+from detect_direct_checkins import main
+
+
+if __name__ == "__main__":
+    main()
+                    """.strip()
+                )
+            subprocess.check_call(
+                [
+                    os.path.join(temp_dir, "env/bin/pyinstaller"),
+                    "--clean",
+                    "--name=detect-direct-checkins",
+                    "--onefile",
+                    "--strip",
+                    os.path.join(temp_dir, "entrypoint.py"),
+                ]
+            )
 
 
 def get_version_from_pyfile(version_file: str = "detect_direct_checkins.py") -> str:
@@ -32,6 +74,7 @@ setup(
             "detect-direct-checkins = detect_direct_checkins:main",
         ]
     },
+    cmdclass={"bdist_pyinstaller": PyinstallerCommand},
     author="Ingo Meyer",
     author_email="i.meyer@fz-juelich.de",
     description="A utility which detects direct checkins on specific branches.",
